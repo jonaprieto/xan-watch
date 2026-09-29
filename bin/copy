@@ -1,0 +1,3 @@
+#!/bin/sh
+# Menu action: copy the clicked value to the clipboard.
+printf %s "$1" | pbcopy

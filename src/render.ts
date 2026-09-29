@@ -12,6 +12,7 @@ export type Actions = {
   collect: string;
   editSettings: string;
   openLog: string;
+  copy: string;
 };
 export type RenderInput = {
   latest: MarketRow | null;
@@ -35,6 +36,9 @@ const MONO = "font=Menlo size=12";
 const GREEN = "#2e9e44";
 const RED = "#d0413e";
 const AMBER = "#d4a017";
+// SwiftBar draws items with no action and no color as disabled (grey). Secondary lines get an explicit
+// readable muted color (light, dark) so they stay enabled but quieter than values.
+const MUTED = "color=#6e6e73,#98989d";
 const BLOCKS = "▁▂▃▄▅▆▇█";
 const STEP_LABEL: Record<Step, string> = {
   config: "Settings",
@@ -81,6 +85,11 @@ function ago(seconds: number): string {
   return `${Math.floor(seconds / 3600)} h ago`;
 }
 
+/** A value line: monospace, and clicking copies `raw` (a plain number) to the clipboard. */
+function copyable(text: string, raw: number, a: Actions): string {
+  return `${text} | ${MONO} bash=${a.copy} param1=${raw} terminal=false tooltip="Click to copy"`;
+}
+
 function footer(a: Actions): string[] {
   return [
     `Run collector now | bash=${a.collect} terminal=false refresh=true`,
@@ -109,7 +118,7 @@ export function render(i: RenderInput): string {
       "XAN … | color=gray",
       "---",
       ...errors,
-      "No data yet. The first collection takes a few seconds.",
+      `No data yet. The first collection takes a few seconds. | ${MUTED}`,
       "---",
       ...footer(i.actions),
     ].join("\n");
@@ -135,32 +144,39 @@ export function render(i: RenderInput): string {
   ];
 
   out.push(...errors);
+  const a = i.actions;
+  out.push(copyable(`Price     ${price(i.latest.price)}`, i.latest.price, a));
   if (live?.marketCap != null)
     out.push(
-      `Mkt cap   ${usd(live.marketCap)}${live.fdv != null ? `   FDV ${usd(live.fdv)}` : ""} | ${MONO}`,
+      copyable(
+        `Mkt cap   ${usd(live.marketCap)}${live.fdv != null ? `   FDV ${usd(live.fdv)}` : ""}`,
+        live.marketCap,
+        a,
+      ),
     );
   if (live?.volume24h != null)
-    out.push(`Vol 24h   ${usd(live.volume24h)} | ${MONO}`);
+    out.push(copyable(`Vol 24h   ${usd(live.volume24h)}`, live.volume24h, a));
   const spark = sparkline(
     i.history7d.map((r) => ({ ts: r.ts, price: r.price })),
     i.now - 7 * 86_400,
     i.now,
   );
-  if (spark)
-    out.push(
-      `7d  ${spark}${live?.change7d != null ? `  ${pct(live.change7d)}` : ""} | ${MONO}`,
-    );
+  if (spark) {
+    const c7 = live?.change7d ?? null;
+    const trend = c7 === null ? MUTED : `color=${c7 >= 0 ? GREEN : RED}`;
+    out.push(`7d  ${spark}${c7 !== null ? `  ${pct(c7)}` : ""} | ${MONO} ${trend}`);
+  }
 
   if (i.hasAddress) {
     out.push("---");
     if (!i.vesting) {
-      out.push("My vesting  waiting for first read");
+      out.push(`My vesting  waiting for first read | ${MUTED}`);
     } else {
       const v = i.vesting;
       const p = i.latest.price;
       const line = (label: string, wei: bigint) => {
         const x = fromWei(wei);
-        return `  ${label.padEnd(10)}${num(x).padStart(12)}  ${usd(x * p).padStart(7)} | ${MONO}`;
+        return copyable(`  ${label.padEnd(10)}${num(x).padStart(12)}  ${usd(x * p).padStart(7)}`, x, a);
       };
       const elapsed = Math.min(Math.max(i.now - VEST_START, 0), VEST_DURATION);
       const day =
@@ -168,11 +184,11 @@ export function render(i: RenderInput): string {
           ? 0
           : Math.min(Math.floor(elapsed / 86_400) + 1, VEST_DAYS);
       out.push(
-        `My vesting  ${num(fromWei(v.principal))} XAN | ${MONO}`,
+        copyable(`My vesting  ${num(fromWei(v.principal))} XAN`, fromWei(v.principal), a),
         line("locked", v.locked),
         line("ready", v.unlockable),
         line("spendable", v.unlocked),
-        `  vested ${((elapsed / VEST_DURATION) * 100).toFixed(1)}%, day ${day} of ${VEST_DAYS} | ${MONO}`,
+        `  vested ${((elapsed / VEST_DURATION) * 100).toFixed(1)}%, day ${day} of ${VEST_DAYS} | ${MONO} ${MUTED}`,
       );
     }
   }
@@ -184,14 +200,14 @@ export function render(i: RenderInput): string {
       parts.push(`${num(live.sentimentUp)}% up votes`);
     if (live.watchlist !== null)
       parts.push(`${num(live.watchlist)} watchlists`);
-    out.push(`Sentiment  ${parts.join(", ")}`);
+    out.push(`Sentiment  ${parts.join(", ")} | ${MUTED}`);
   }
   if (live?.circulating != null)
     out.push(
-      `Unlock supply today ~${num((TOTAL_SUPPLY - live.circulating) / VEST_DAYS / 1e6, 2)}M XAN (network estimate)`,
+      `Unlock supply today ~${num((TOTAL_SUPPLY - live.circulating) / VEST_DAYS / 1e6, 2)}M XAN (network estimate) | ${MUTED}`,
     );
   out.push(
-    `Updated ${ago(i.now - i.latest.ts)}`,
+    `Updated ${ago(i.now - i.latest.ts)} | ${MUTED}`,
     `Open CoinGecko ↗ | href=${COINGECKO_URL}`,
     "---",
     ...footer(i.actions),

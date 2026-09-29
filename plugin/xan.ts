@@ -10,6 +10,7 @@ const actions: Actions = {
   collect: join(bin, "collect-once"),
   editSettings: join(bin, "edit-settings"),
   openLog: join(bin, "open-log"),
+  copy: join(bin, "copy"),
 };
 const paths = defaultPaths(process.env.XAN_WATCH_HOME ?? homedir());
 const now = Math.floor(Date.now() / 1000);

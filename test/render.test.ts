@@ -14,7 +14,11 @@ const actions = {
   collect: "/r/bin/collect-once",
   editSettings: "/r/bin/edit-settings",
   openLog: "/r/bin/open-log",
+  copy: "/r/bin/copy",
 };
+const MONO = "font=Menlo size=12";
+const copy = (raw: string) => `bash=/r/bin/copy param1=${raw} terminal=false tooltip="Click to copy"`;
+const MUTED = "color=#6e6e73,#98989d";
 const live = (extra: Partial<MarketRow> = {}): MarketRow => ({
   ts: NOW - 120,
   price: 0.01222,
@@ -75,11 +79,12 @@ test("stale data is marked after 15 minutes", () => {
 
 test("market lines are formatted", () => {
   const out = render(input());
-  expect(out).toContain("Mkt cap   $30.24M   FDV $121.0M | font=Menlo size=12");
-  expect(out).toContain("Vol 24h   $2.139M | font=Menlo size=12");
-  expect(out).toContain("Sentiment  100% up votes, 2,409 watchlists");
-  expect(out).toContain("Unlock supply today ~6.85M XAN (network estimate)");
-  expect(out).toContain("Updated 2 min ago");
+  expect(out).toContain(`Price     $0.01222 | ${MONO} ${copy("0.01222")}`);
+  expect(out).toContain(`Mkt cap   $30.24M   FDV $121.0M | ${MONO} ${copy("30237691")}`);
+  expect(out).toContain(`Vol 24h   $2.139M | ${MONO} ${copy("2139257")}`);
+  expect(out).toContain(`Sentiment  100% up votes, 2,409 watchlists | ${MUTED}`);
+  expect(out).toContain(`Unlock supply today ~6.85M XAN (network estimate) | ${MUTED}`);
+  expect(out).toContain(`Updated 2 min ago | ${MUTED}`);
   expect(out).toContain(
     "Open CoinGecko ↗ | href=https://www.coingecko.com/en/coins/anoma",
   );
@@ -95,19 +100,15 @@ test("market lines are formatted", () => {
 test("vesting block only with an address", () => {
   expect(render(input({ vesting }))).not.toContain("My vesting");
   const out = render(input({ vesting, hasAddress: true }));
-  expect(out).toContain("My vesting  16,000,000 XAN | font=Menlo size=12");
-  expect(out).toContain(
-    "  locked      15,985,388  $195.3k | font=Menlo size=12",
-  );
-  expect(out).toContain(
-    "  ready           14,612     $179 | font=Menlo size=12",
-  );
-  expect(out).toContain("  vested 0.1%, day 1 of 1095 | font=Menlo size=12");
+  expect(out).toContain(`My vesting  16,000,000 XAN | ${MONO} ${copy("16000000")}`);
+  expect(out).toContain(`  locked      15,985,388  $195.3k | ${MONO} ${copy("15985388")}`);
+  expect(out).toContain(`  ready           14,612     $179 | ${MONO} ${copy("14612")}`);
+  expect(out).toContain(`  vested 0.1%, day 1 of 1095 | ${MONO} ${MUTED}`);
 });
 
 test("address set but no vesting row yet says so", () => {
   expect(render(input({ hasAddress: true }))).toContain(
-    "My vesting  waiting for first read",
+    `My vesting  waiting for first read | ${MUTED}`,
   );
 });
 
@@ -141,7 +142,7 @@ test("no data yet", () => {
   const out = render(input({ latestLive: null }));
   expect(lines(out)[0]).toBe("XAN … | color=gray");
   expect(out).toContain(
-    "No data yet. The first collection takes a few seconds.",
+    `No data yet. The first collection takes a few seconds. | ${MUTED}`,
   );
   expect(out).toContain(
     "Run collector now | bash=/r/bin/collect-once terminal=false refresh=true",
@@ -202,8 +203,22 @@ test("7d line uses history and the live 7d change", () => {
     live({ ts: NOW - (168 - i) * 3600, price: 0.01 + i / 1e5 }),
   );
   expect(render(input({ history7d }))).toMatch(
-    /^7d  [▁-█]{16}  -1\.4% \| font=Menlo size=12$/m,
+    /^7d  [▁-█]{16}  -1\.4% \| font=Menlo size=12 color=#d0413e$/m,
   );
+  expect(render(input({ history7d, latestLive: live({ change7d: 2.1 }) }))).toMatch(
+    /^7d  [▁-█]{16}  \+2\.1% \| font=Menlo size=12 color=#2e9e44$/m,
+  );
+  expect(render(input({ history7d, latestLive: live({ change7d: null }) }))).toMatch(
+    /^7d  [▁-█]{16} \| font=Menlo size=12 color=#6e6e73,#98989d$/m,
+  );
+});
+
+test("every informational line is enabled: it has a click action or a color", () => {
+  const out = render(input({ vesting, hasAddress: true, history7d: [live({ ts: NOW - 3600 })] }));
+  for (const l of lines(out)) {
+    if (l === "---") continue;
+    expect(l).toMatch(/\| .*(bash=|href=|color=)/);
+  }
 });
 
 test("error text is kept on one line and cannot inject SwiftBar parameters", () => {
