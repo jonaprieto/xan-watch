@@ -202,7 +202,7 @@ export function render(i: RenderInput): string {
       parts.push(`${num(live.sentimentUp)}% up votes`);
     if (live.watchlist !== null)
       parts.push(`${num(live.watchlist)} watchlists`);
-    out.push(`Sentiment  ${parts.join(", ")} | ${MUTED}`);
+    out.push(`Sentiment  ${parts.join(", ")} | ${MUTED} href=${COINGECKO_URL}`);
   }
   if (live?.circulating != null)
     out.push(

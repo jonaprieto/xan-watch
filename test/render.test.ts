@@ -82,7 +82,7 @@ test("market lines are formatted", () => {
   expect(out).toContain(`Price     $0.01222 | ${MONO} ${copy("0.01222")}`);
   expect(out).toContain(`Mkt cap   $30.24M   FDV $121.0M | ${MONO} ${copy("30237691")}`);
   expect(out).toContain(`Vol 24h   $2.139M | ${MONO} ${copy("2139257")}`);
-  expect(out).toContain(`Sentiment  100% up votes, 2,409 watchlists | ${MUTED}`);
+  expect(out).toContain(`Sentiment  100% up votes, 2,409 watchlists | ${MUTED} href=https://www.coingecko.com/en/coins/anoma`);
   expect(out).toContain(`Unlock supply today ~6.85M XAN (network estimate) | ${MUTED}`);
   expect(out).toContain(`Updated 2 min ago | ${MUTED}`);
   expect(out).not.toContain("Open CoinGecko");
