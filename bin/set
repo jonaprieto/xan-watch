@@ -1,7 +1,8 @@
 #!/bin/sh
 # Menu action: change one setting, then collect so the menu reflects it right away.
 # Invalid input (e.g. a clipboard that is not an address) is reported as a notification.
-. "$(dirname "$0")/env.sh"
+. "$HOME/Library/Application Support/xan-watch/env.sh"
+REPO=$(cd "$(dirname "$0")/.." && pwd)
 key=$1
 value=$2
 [ "$value" = clipboard ] && value=$(pbpaste)

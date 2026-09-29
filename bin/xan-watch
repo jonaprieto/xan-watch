@@ -1,0 +1,84 @@
+#!/bin/sh
+# Setup and removal for the menu bar tool. Works from a git clone or a Homebrew install
+# (the formula sets XAN_WATCH_ROOT to the stable opt path so upgrades keep working).
+set -eu
+
+LABEL=com.jonaprieto.xan-watch
+if [ -z "${XAN_WATCH_ROOT:-}" ]; then
+  XAN_WATCH_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+fi
+ROOT=$XAN_WATCH_ROOT
+PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+CONFIG="$HOME/.config/xan-watch/config.toml"
+DATA="$HOME/Library/Application Support/xan-watch"
+DEFAULT_PLUGIN_DIR="$DATA/swiftbar-plugins"
+UID_=$(id -u)
+
+usage() {
+  cat <<USAGE
+usage: xan-watch setup [--address 0x...]
+       xan-watch uninstall
+
+setup      point SwiftBar at a plugin folder, write the settings file, start the
+           collector as a login item and open SwiftBar (installs SwiftBar if missing)
+uninstall  stop the collector and remove the login item and the menu plugin
+USAGE
+}
+
+setup() {
+  address=
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --address) [ $# -ge 2 ] || { echo "--address needs a value" >&2; exit 2; }; address=$2; shift 2 ;;
+      *) usage >&2; exit 2 ;;
+    esac
+  done
+  BUN=$(command -v bun) || { echo "bun not found: install it from https://bun.sh" >&2; exit 1; }
+  [ -d /Applications/SwiftBar.app ] || brew install --cask swiftbar
+  # a clone needs its dependencies; a brew install already has them
+  [ ! -d "$ROOT/.git" ] || (cd "$ROOT" && "$BUN" install --frozen-lockfile)
+  mkdir -p "$DATA"
+  printf "BUN='%s'\n" "$BUN" > "$DATA/env.sh"
+  # Point SwiftBar at a plugin folder unless the user already chose one, so no folder picker appears.
+  dir=$(defaults read com.ameba.SwiftBar PluginDirectory 2>/dev/null || true)
+  if [ -z "$dir" ]; then dir=$DEFAULT_PLUGIN_DIR; defaults write com.ameba.SwiftBar PluginDirectory "$dir"; fi
+  mkdir -p "$dir"
+  printf '#!/bin/sh\nexec "%s" "%s/plugin/xan.ts"\n' "$BUN" "$ROOT" > "$dir/xan.1m.sh"
+  chmod +x "$dir/xan.1m.sh"
+  echo "plugin: $dir/xan.1m.sh"
+  if [ ! -f "$CONFIG" ]; then
+    mkdir -p "$(dirname "$CONFIG")"
+    if [ -n "$address" ]; then
+      "$BUN" "$ROOT/src/config.ts" --template --address "$address" > "$CONFIG.tmp"
+    else
+      "$BUN" "$ROOT/src/config.ts" --template > "$CONFIG.tmp"
+    fi
+    mv "$CONFIG.tmp" "$CONFIG"
+    echo "config: $CONFIG"
+  elif [ -n "$address" ]; then
+    echo 'config exists, address ignored: use Settings > Set address from clipboard in the menu'
+  fi
+  mkdir -p "$HOME/Library/Logs" "$HOME/Library/LaunchAgents"
+  sed -e "s|@BUN@|$BUN|g" -e "s|@REPO@|$ROOT|g" -e "s|@HOME@|$HOME|g" \
+    "$ROOT/launchd/$LABEL.plist.in" > "$PLIST"
+  launchctl bootout "gui/$UID_/$LABEL" 2>/dev/null && sleep 1 || true
+  launchctl bootstrap "gui/$UID_" "$PLIST"
+  echo "collector running; first collection in progress"
+  open -a SwiftBar
+  echo "done: XAN should appear in the menu bar within a minute"
+}
+
+uninstall() {
+  launchctl bootout "gui/$UID_/$LABEL" 2>/dev/null || true
+  rm -f "$PLIST" "$DATA/env.sh" "$ROOT/bin/env.sh"
+  dir=$(defaults read com.ameba.SwiftBar PluginDirectory 2>/dev/null || true)
+  if [ -n "$dir" ]; then rm -f "$dir/xan.1m.sh"; fi
+  echo "removed. Kept: SwiftBar, $CONFIG, and the data in $DATA"
+}
+
+case ${1:-} in
+  setup) shift; setup "$@" ;;
+  uninstall) uninstall ;;
+  -h | --help | help) usage ;;
+  *) usage >&2; exit 2 ;;
+esac

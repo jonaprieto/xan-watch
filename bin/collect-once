@@ -1,3 +1,4 @@
 #!/bin/sh
-. "$(dirname "$0")/env.sh"
+. "$HOME/Library/Application Support/xan-watch/env.sh"
+REPO=$(cd "$(dirname "$0")/.." && pwd)
 exec "$BUN" "$REPO/src/collect.ts" --once >> "$HOME/Library/Logs/xan-watch.log" 2>&1
