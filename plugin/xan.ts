@@ -1,6 +1,6 @@
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { type Settings, defaultPaths, loadConfig } from "../src/config";
 import { type StepError, latestLive, latestMarket, latestVesting, listErrors, marketSince, openReader } from "../src/db";
 import { type Actions, render, renderFailure } from "../src/render";
@@ -14,6 +14,18 @@ const actions: Actions = {
 };
 const paths = defaultPaths(process.env.XAN_WATCH_HOME ?? homedir());
 const now = Math.floor(Date.now() / 1000);
+
+// The menu actions in bin/ source this for the bun path. Recreate it if missing (e.g. an install
+// from before it moved here) so the actions never exit silently.
+const envSh = join(dirname(paths.db), "env.sh");
+try {
+  if (!existsSync(envSh)) {
+    mkdirSync(dirname(envSh), { recursive: true });
+    writeFileSync(envSh, `BUN='${process.execPath}'\n`);
+  }
+} catch {
+  // Rendering the menu matters more than repairing the actions.
+}
 
 let settings: Settings | null = null;
 let configError: StepError | null = null;

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { insertMarket, openDb } from "../src/db";
@@ -15,6 +15,8 @@ test("no DB yet shows the waiting menu", () => {
   const r = run(home);
   expect(r.code).toBe(0);
   expect(r.out.split("\n")[0]).toBe("XAN … | color=gray");
+  const env = readFileSync(join(home, "Library", "Application Support", "xan-watch", "env.sh"), "utf8");
+  expect(env).toBe(`BUN='${process.execPath}'\n`);
 });
 
 test("renders from the DB", () => {

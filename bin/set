@@ -6,10 +6,16 @@ REPO=$(cd "$(dirname "$0")/.." && pwd)
 key=$1
 value=$2
 [ "$value" = clipboard ] && value=$(pbpaste)
+notify() {
+  osascript -e 'on run argv' -e 'display notification (item 1 of argv) with title "xan-watch"' -e 'end run' "$1"
+}
 if ! err=$("$BUN" "$REPO/src/config.ts" --set "$key" "$value" 2>&1); then
-  osascript -e 'on run argv' -e 'display notification (item 1 of argv) with title "xan-watch"' -e 'end run' "$err"
+  notify "$err"
   exit 1
 fi
 case "$key" in
-  address | reset) "$(dirname "$0")/collect-once" ;;
+  address)
+    if [ "$value" = none ]; then notify "Address removed"; else notify "Address set to $value, reading balances"; fi
+    "$(dirname "$0")/collect-once" ;;
+  reset) "$(dirname "$0")/collect-once" ;;
 esac
