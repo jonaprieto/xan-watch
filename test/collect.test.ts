@@ -86,3 +86,13 @@ test("a failing RPC is reported and does not block market data", async () => {
   expect(marketSince(d.db, 0).length).toBe(4);
   expect(listErrors(d.db).map((e) => [e.step, e.message])).toEqual([["vesting", "rpc timeout"]]);
 });
+
+test("a viem-style error records its short message, not the long one", async () => {
+  const { d } = deps({
+    makeReader: () => async () => {
+      throw Object.assign(new Error("HTTP request failed.\n\nURL: https://rpc.example\nDetails: timeout\nVersion: viem@2"), { shortMessage: "HTTP request failed." });
+    },
+  });
+  await tick(d);
+  expect(listErrors(d.db).map((e) => [e.step, e.message])).toEqual([["vesting", "HTTP request failed."]]);
+});

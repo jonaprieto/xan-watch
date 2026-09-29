@@ -102,7 +102,7 @@ export function renderFailure(message: string, actions: Actions): string {
 export function render(i: RenderInput): string {
   const errors = i.errors.map(
     (e) =>
-      `⚠ ${STEP_LABEL[e.step]}: ${oneLine(e.message)} (${ago(i.now - e.ts)}) | color=${AMBER}`,
+      `⚠ ${STEP_LABEL[e.step]}: ${oneLine(e.message.replace(/^(coingecko|config): /, ""))} (${ago(i.now - e.ts)}) | color=${AMBER}`,
   );
   if (!i.latest) {
     return [

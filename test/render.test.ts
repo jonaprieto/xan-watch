@@ -121,11 +121,20 @@ test("errors are shown in plain words", () => {
     }),
   );
   expect(out).toContain(
-    "⚠ CoinGecko: coingecko: HTTP 429 (12 min ago) | color=#d4a017",
+    "⚠ CoinGecko: HTTP 429 (12 min ago) | color=#d4a017",
   );
   expect(out).toContain(
     "⚠ Ethereum RPC: rpc timeout (1 min ago) | color=#d4a017",
   );
+});
+
+test("config errors lose their redundant prefix", () => {
+  const out = render(
+    input({
+      errors: [{ step: "config", ts: NOW - 60, message: "config: bad address" }],
+    }),
+  );
+  expect(out).toContain("⚠ Settings: bad address (1 min ago) | color=#d4a017");
 });
 
 test("no data yet", () => {

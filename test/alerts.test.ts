@@ -120,6 +120,13 @@ test("volume_spike fires at 3x the prior week's mean", () => {
   );
 });
 
+test("volume_spike ignores a zero-volume history", () => {
+  const rows: MarketRow[] = [];
+  for (let t = NOW - 8 * D; t < NOW; t += H) rows.push(row(t, 1, { volume24h: 0 }));
+  rows.push(row(NOW, 1, { volume24h: 5_000_000 }));
+  expect(run({ history: rows })).toEqual([]);
+});
+
 test("volume_spike needs a week of history", () => {
   const short = weekOfVolume(9_000_000).filter((r) => r.ts >= NOW - 3 * D);
   expect(run({ history: short })).toEqual([]);

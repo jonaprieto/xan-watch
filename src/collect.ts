@@ -28,7 +28,9 @@ export async function tick(d: Deps): Promise<void> {
       await fn();
       clearError(d.db, name);
     } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
+      const short = (e as { shortMessage?: unknown } | null)?.shortMessage;
+      const message =
+        typeof short === "string" ? short : e instanceof Error ? e.message : String(e);
       d.log(`${name} failed: ${message}`);
       try {
         setError(d.db, { step: name, ts: d.now(), message });

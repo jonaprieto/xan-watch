@@ -60,6 +60,7 @@ function volumeSpike(i: AlertInput): Alert | null {
   // Need rows reaching back at least 7 days, or the "average" is not a week's average.
   if (prior.length === 0 || prior[0]!.ts > latest.ts - 7 * DAY) return null;
   const mean = prior.reduce((s, r) => s + r.volume24h!, 0) / prior.length;
+  if (!(mean > 0)) return null;
   const x = latest.volume24h / mean;
   if (x < i.cfg.volumeSpikeX) return null;
   return {
