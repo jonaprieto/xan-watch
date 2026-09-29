@@ -1,0 +1,15 @@
+{
+  "id": "anoma",
+  "sentiment_votes_up_percentage": 100.0,
+  "watchlist_portfolio_users": 2409,
+  "market_data": {
+    "current_price": { "usd": 0.01209504, "eur": 0.0104 },
+    "market_cap": { "usd": 30237691 },
+    "fully_diluted_valuation": { "usd": 120950765 },
+    "total_volume": { "usd": 2139257 },
+    "price_change_percentage_24h": -0.28982,
+    "price_change_percentage_7d": -2.5442,
+    "circulating_supply": 2500000000.0,
+    "total_supply": 10000000000.0
+  }
+}
