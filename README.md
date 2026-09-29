@@ -4,6 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![macOS](https://img.shields.io/badge/platform-macOS-lightgrey?logo=apple)
 ![Bun](https://img.shields.io/badge/Bun-1.3-f9f1e1?logo=bun)
+[![Homebrew](https://img.shields.io/badge/brew-jonaprieto%2Fxan--watch-fbb040?logo=homebrew)](#install)
 
 XAN (Anoma) in the macOS menu bar: the price with its 24h change, market cap, FDV, volume, a 7-day
 sparkline, and, if you give it your address, your vesting position in XAN and USD. A background
@@ -22,7 +23,21 @@ to read public balances from the XanV2 token contract.
 
 ## Install
 
-Clone into a folder whose path has no spaces (the menu actions point into it), then run one command:
+With Homebrew (installs Bun for you):
+
+```sh
+brew tap jonaprieto/xan-watch https://github.com/jonaprieto/xan-watch
+brew trust --formula jonaprieto/xan-watch/xan-watch   # third-party taps need it
+brew install xan-watch
+xan-watch setup                                  # market data only
+xan-watch setup --address 0xYourVestingAddress   # also show your vesting position
+```
+
+`xan-watch uninstall` removes the login item and the menu plugin. Setup does the same things as
+`make install` below; `brew upgrade` keeps working because everything points at Homebrew's stable
+`opt` path.
+
+Or clone into a folder whose path has no spaces (the menu actions point into it), then run one command:
 
 ```sh
 git clone https://github.com/jonaprieto/xan-watch.git ~/xan-watch
@@ -38,7 +53,7 @@ opens SwiftBar. XAN shows up in the menu bar within a minute, with 30 days of hi
 If SwiftBar was already running, quit and reopen it once so it picks up the plugin. The first
 notification may ask you to allow notifications from Script Editor; allow them, or alerts stay silent.
 
-Keep the folder where you cloned it. If you move it, run `make install` again from the new place.
+With a clone, keep the folder where you cloned it. If you move it, run `make install` again from the new place.
 
 ## Use
 
@@ -83,7 +98,8 @@ RPC when an address is set.
 ## Uninstall
 
 ```sh
-make uninstall
+xan-watch uninstall    # Homebrew
+make uninstall         # clone
 ```
 
 This stops the collector and removes the login item and the menu plugin. It keeps SwiftBar, your
