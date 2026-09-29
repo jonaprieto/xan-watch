@@ -18,6 +18,7 @@ const actions = {
   copy: "/r/bin/copy",
 };
 const MONO = "font=Menlo size=12";
+const BOLD = "font=Menlo-Bold size=12";
 const copy = (raw: string) => `bash=/r/bin/copy param1=${raw} terminal=false tooltip="Click to copy"`;
 const MUTED = "color=#6e6e73,#98989d";
 const ADDR = "0x1234567890abcdef1234567890abcdef12345678" as const;
@@ -84,7 +85,7 @@ test("stale data is marked after 15 minutes", () => {
 
 test("market lines are formatted", () => {
   const out = render(input());
-  expect(out).toContain(`Price     $0.01222 | ${MONO} ${copy("0.01222")}`);
+  expect(out).toContain(`Price     $0.01222 | ${BOLD} ${copy("0.01222")}`);
   expect(out).toContain(`Mkt cap   $30.24M   FDV $121.0M | ${MONO} ${copy("30237691")}`);
   expect(out).toContain(`Vol 24h   $2.139M | ${MONO} ${copy("2139257")}`);
   expect(out).toContain(`Sentiment  100% up votes, 2,409 watchlists | ${MUTED} href=https://www.coingecko.com/en/coins/anoma`);
@@ -103,10 +104,10 @@ test("market lines are formatted", () => {
 test("vesting block only with an address", () => {
   expect(render(input({ vesting }))).not.toContain("My vesting");
   const out = render(input({ vesting, settings: WITH_ADDR }));
-  expect(out).toContain(`My vesting | ${MUTED}`);
+  expect(out).toContain(`My vesting | ${BOLD} color=#1d1d1f,#f5f5f7`);
   expect(out).toContain(`  allocation        16,000,000  $195.5k | ${MONO} ${copy("16000000")}`);
   expect(out).toContain(`  still locked      15,985,388  $195.3k | ${MONO} ${copy("15985388")}`);
-  expect(out).toContain(`  ready to unlock       14,612     $179 | ${MONO} ${copy("14612")}`);
+  expect(out).toContain(`  ready to unlock       14,612     $179 | ${BOLD} ${copy("14612")}`);
   expect(out).toContain(`  spendable                  0       $0 | ${MONO} ${copy("0")}`);
   expect(out).toContain(`  total balance     16,000,000  $195.5k | ${MONO} ${copy("16000000")}`);
   expect(out).toContain(`  vested 0.1%, day 1 of 1095 | ${MONO} ${MUTED}`);

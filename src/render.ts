@@ -37,6 +37,9 @@ export function oneLine(s: string, max = 120): string {
   return t.length > max ? `${t.slice(0, max - 1)}…` : t;
 }
 const MONO = "font=Menlo size=12";
+const BOLD = "font=Menlo-Bold size=12";
+// Primary text color (light, dark) for a heading that has no action but must not render disabled.
+const PRIMARY = "color=#1d1d1f,#f5f5f7";
 const GREEN = "#2e9e44";
 const RED = "#d0413e";
 const AMBER = "#d4a017";
@@ -90,8 +93,8 @@ function ago(seconds: number): string {
 }
 
 /** A value line: monospace, and clicking copies `raw` (a plain number) to the clipboard. */
-function copyable(text: string, raw: number | string, a: Actions): string {
-  return `${text} | ${MONO} bash=${a.copy} param1=${raw} terminal=false tooltip="Click to copy"`;
+function copyable(text: string, raw: number | string, a: Actions, font = MONO): string {
+  return `${text} | ${font} bash=${a.copy} param1=${raw} terminal=false tooltip="Click to copy"`;
 }
 
 function setAction(a: Actions, key: string, value: string | number): string {
@@ -198,7 +201,7 @@ export function render(i: RenderInput): string {
 
   out.push(...errors);
   const a = i.actions;
-  out.push(copyable(`Price     ${price(i.latest.price)}`, i.latest.price, a));
+  out.push(copyable(`Price     ${price(i.latest.price)}`, i.latest.price, a, BOLD));
   if (live?.marketCap != null)
     out.push(
       copyable(
@@ -227,9 +230,9 @@ export function render(i: RenderInput): string {
     } else {
       const v = i.vesting;
       const p = i.latest.price;
-      const line = (label: string, wei: bigint) => {
+      const line = (label: string, wei: bigint, font = MONO) => {
         const x = fromWei(wei);
-        return copyable(`  ${label.padEnd(16)}${num(x).padStart(12)}  ${usd(x * p).padStart(7)}`, x, a);
+        return copyable(`  ${label.padEnd(16)}${num(x).padStart(12)}  ${usd(x * p).padStart(7)}`, x, a, font);
       };
       const elapsed = Math.min(Math.max(i.now - VEST_START, 0), VEST_DURATION);
       const day =
@@ -237,10 +240,10 @@ export function render(i: RenderInput): string {
           ? 0
           : Math.min(Math.floor(elapsed / 86_400) + 1, VEST_DAYS);
       out.push(
-        `My vesting | ${MUTED}`,
+        `My vesting | ${BOLD} ${PRIMARY}`,
         line("allocation", v.principal),
         line("still locked", v.locked),
-        line("ready to unlock", v.unlockable),
+        line("ready to unlock", v.unlockable, BOLD),
         line("spendable", v.unlocked),
         line("total balance", v.balance),
         `  vested ${((elapsed / VEST_DURATION) * 100).toFixed(1)}%, day ${day} of ${VEST_DAYS} | ${MONO} ${MUTED}`,
