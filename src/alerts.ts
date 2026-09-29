@@ -34,7 +34,9 @@ export function localDay(ts: number): string {
 function priceMove(i: AlertInput): Alert | null {
   const latest = i.history.at(-1);
   if (!latest || cooling(i, "price_move")) return null;
-  const ref = i.history.findLast((r) => r.ts <= latest.ts - HOUR);
+  const ref = i.history.findLast(
+    (r) => r.ts <= latest.ts - HOUR && r.ts >= latest.ts - 2 * HOUR,
+  );
   if (!ref) return null;
   const change = ((latest.price - ref.price) / ref.price) * 100;
   if (Math.abs(change) < i.cfg.priceMovePct) return null;

@@ -91,6 +91,13 @@ test("price_move compares with the newest row at least an hour old", () => {
   expect(run({ history })).toEqual([]);
 });
 
+test("price_move ignores a reference older than 2 hours (data gap)", () => {
+  expect(run({ history: [row(NOW - 8 * H, 1), row(NOW, 1.1)] })).toEqual([]);
+  expect(run({ history: [row(NOW - 2 * H, 1), row(NOW, 1.1)] })).toEqual([
+    "price_move",
+  ]);
+});
+
 function weekOfVolume(latest: number): MarketRow[] {
   const rows: MarketRow[] = [];
   for (let t = NOW - 8 * D; t < NOW; t += H)
