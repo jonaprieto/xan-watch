@@ -4,4 +4,5 @@ export const TOTAL_SUPPLY = 10_000_000_000;
 export const VEST_START = 1_790_683_200;
 export const VEST_DAYS = 1095;
 export const VEST_DURATION = VEST_DAYS * 86_400;
+export const EXPLORER_URL = "https://explorer.anoma.net";
 export const COINGECKO_URL = "https://www.coingecko.com/en/coins/anoma";

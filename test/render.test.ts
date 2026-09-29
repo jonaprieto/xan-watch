@@ -86,6 +86,7 @@ test("market lines are formatted", () => {
   expect(out).toContain(`Unlock supply today ~6.85M XAN (network estimate) | ${MUTED}`);
   expect(out).toContain(`Updated 2 min ago | ${MUTED}`);
   expect(out).not.toContain("Open CoinGecko");
+  expect(out).toContain("Anoma Explorer ↗ | href=https://explorer.anoma.net");
   expect(out).toContain(
     "Refresh now | bash=/r/bin/collect-once terminal=false refresh=true",
   );

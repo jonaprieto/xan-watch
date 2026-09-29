@@ -1,5 +1,6 @@
 import {
   COINGECKO_URL,
+  EXPLORER_URL,
   TOTAL_SUPPLY,
   VEST_DAYS,
   VEST_DURATION,
@@ -93,6 +94,7 @@ function copyable(text: string, raw: number, a: Actions): string {
 function footer(a: Actions): string[] {
   return [
     `Refresh now | bash=${a.collect} terminal=false refresh=true`,
+    `Anoma Explorer ↗ | href=${EXPLORER_URL}`,
     `Edit settings… | bash=${a.editSettings} terminal=false`,
     `Open log | bash=${a.openLog} terminal=false`,
   ];
