@@ -1,0 +1,4 @@
+#!/bin/sh
+LOG="$HOME/Library/Logs/xan-watch.log"
+touch "$LOG"
+exec open -a Console "$LOG"

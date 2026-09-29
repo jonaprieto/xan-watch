@@ -1,0 +1,8 @@
+#!/bin/sh
+. "$(dirname "$0")/env.sh"
+CFG="$HOME/.config/xan-watch/config.toml"
+if [ ! -f "$CFG" ]; then
+  mkdir -p "$(dirname "$CFG")"
+  "$BUN" "$REPO/src/config.ts" --template > "$CFG"
+fi
+exec open -t "$CFG"

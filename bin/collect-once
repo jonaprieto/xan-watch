@@ -1,0 +1,3 @@
+#!/bin/sh
+. "$(dirname "$0")/env.sh"
+exec "$BUN" "$REPO/src/collect.ts" --once >> "$HOME/Library/Logs/xan-watch.log" 2>&1
