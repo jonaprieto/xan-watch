@@ -224,7 +224,7 @@ export function render(i: RenderInput): string {
       const p = i.latest.price;
       const line = (label: string, wei: bigint) => {
         const x = fromWei(wei);
-        return copyable(`  ${label.padEnd(10)}${num(x).padStart(12)}  ${usd(x * p).padStart(7)}`, x, a);
+        return copyable(`  ${label.padEnd(16)}${num(x).padStart(12)}  ${usd(x * p).padStart(7)}`, x, a);
       };
       const elapsed = Math.min(Math.max(i.now - VEST_START, 0), VEST_DURATION);
       const day =
@@ -232,10 +232,12 @@ export function render(i: RenderInput): string {
           ? 0
           : Math.min(Math.floor(elapsed / 86_400) + 1, VEST_DAYS);
       out.push(
-        copyable(`My vesting  ${num(fromWei(v.principal))} XAN`, fromWei(v.principal), a),
-        line("locked", v.locked),
-        line("ready", v.unlockable),
+        `My vesting | ${MUTED}`,
+        line("allocation", v.principal),
+        line("still locked", v.locked),
+        line("ready to unlock", v.unlockable),
         line("spendable", v.unlocked),
+        line("total balance", v.balance),
         `  vested ${((elapsed / VEST_DURATION) * 100).toFixed(1)}%, day ${day} of ${VEST_DAYS} | ${MONO} ${MUTED}`,
       );
     }

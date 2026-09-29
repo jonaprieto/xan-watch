@@ -102,9 +102,12 @@ test("market lines are formatted", () => {
 test("vesting block only with an address", () => {
   expect(render(input({ vesting }))).not.toContain("My vesting");
   const out = render(input({ vesting, settings: WITH_ADDR }));
-  expect(out).toContain(`My vesting  16,000,000 XAN | ${MONO} ${copy("16000000")}`);
-  expect(out).toContain(`  locked      15,985,388  $195.3k | ${MONO} ${copy("15985388")}`);
-  expect(out).toContain(`  ready           14,612     $179 | ${MONO} ${copy("14612")}`);
+  expect(out).toContain(`My vesting | ${MUTED}`);
+  expect(out).toContain(`  allocation        16,000,000  $195.5k | ${MONO} ${copy("16000000")}`);
+  expect(out).toContain(`  still locked      15,985,388  $195.3k | ${MONO} ${copy("15985388")}`);
+  expect(out).toContain(`  ready to unlock       14,612     $179 | ${MONO} ${copy("14612")}`);
+  expect(out).toContain(`  spendable                  0       $0 | ${MONO} ${copy("0")}`);
+  expect(out).toContain(`  total balance     16,000,000  $195.5k | ${MONO} ${copy("16000000")}`);
   expect(out).toContain(`  vested 0.1%, day 1 of 1095 | ${MONO} ${MUTED}`);
 });
 
