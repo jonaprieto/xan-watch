@@ -42,9 +42,10 @@ const TITLE = "font=.AppleSystemUIFontBold size=13";
 const BOLD = "font=Menlo-Bold size=12";
 // Primary text color (light, dark) for a heading that has no action but must not render disabled.
 const PRIMARY = "color=#1d1d1f,#f5f5f7";
-const GREEN = "#2e9e44";
-const RED = "#d0413e";
-const AMBER = "#d4a017";
+// (light, dark): SwiftBar picks by appearance; the dark values are Apple's dark-mode system colors.
+const GREEN = "#2e9e44,#30d158";
+const RED = "#d0413e,#ff453a";
+const AMBER = "#d4a017,#ffd60a";
 // SwiftBar draws items with no action and no color as disabled (grey). Secondary lines get an explicit
 // readable muted color (light, dark) so they stay enabled but quieter than values.
 const MUTED = "color=#6e6e73,#98989d";

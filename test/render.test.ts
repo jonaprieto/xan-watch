@@ -64,20 +64,20 @@ const input = (over: Partial<RenderInput> = {}): RenderInput => {
 const lines = (s: string) => s.split("\n");
 
 test("title shows price and a green up arrow", () => {
-  expect(lines(render(input()))[0]).toBe("XAN $0.01222 ▲0.7% | font=.AppleSystemUIFontBold size=13 color=#2e9e44");
+  expect(lines(render(input()))[0]).toBe("XAN $0.01222 ▲0.7% | font=.AppleSystemUIFontBold size=13 color=#2e9e44,#30d158");
   expect(lines(render(input()))[1]).toBe("---");
 });
 
 test("title shows a red down arrow", () => {
   expect(
     lines(render(input({ latestLive: live({ change24h: -1.4 }) })))[0],
-  ).toBe("XAN $0.01222 ▼1.4% | font=.AppleSystemUIFontBold size=13 color=#d0413e");
+  ).toBe("XAN $0.01222 ▼1.4% | font=.AppleSystemUIFontBold size=13 color=#d0413e,#ff453a");
 });
 
 test("stale data is marked after 15 minutes", () => {
   expect(
     lines(render(input({ latestLive: live({ ts: NOW - 16 * 60 }) })))[0],
-  ).toBe("XAN $0.01222 ▲0.7% stale | font=.AppleSystemUIFontBold size=13 color=#d4a017");
+  ).toBe("XAN $0.01222 ▲0.7% stale | font=.AppleSystemUIFontBold size=13 color=#d4a017,#ffd60a");
   expect(
     lines(render(input({ latestLive: live({ ts: NOW - 14 * 60 }) })))[0],
   ).not.toContain("stale");
@@ -129,10 +129,10 @@ test("errors are shown in plain words", () => {
     }),
   );
   expect(out).toContain(
-    "⚠ CoinGecko: HTTP 429 (12 min ago) | color=#d4a017",
+    "⚠ CoinGecko: HTTP 429 (12 min ago) | color=#d4a017,#ffd60a",
   );
   expect(out).toContain(
-    "⚠ Ethereum RPC: rpc timeout (1 min ago) | color=#d4a017",
+    "⚠ Ethereum RPC: rpc timeout (1 min ago) | color=#d4a017,#ffd60a",
   );
 });
 
@@ -142,7 +142,7 @@ test("config errors lose their redundant prefix", () => {
       errors: [{ step: "config", ts: NOW - 60, message: "config: bad address" }],
     }),
   );
-  expect(out).toContain("⚠ Settings: bad address (1 min ago) | color=#d4a017");
+  expect(out).toContain("⚠ Settings: bad address (1 min ago) | color=#d4a017,#ffd60a");
 });
 
 test("no data yet", () => {
@@ -161,7 +161,7 @@ test("failure screen", () => {
     "config: address must be a 0x address (40 hex characters)",
     actions,
   );
-  expect(lines(out)[0]).toBe("XAN ⚠ | color=#d0413e");
+  expect(lines(out)[0]).toBe("XAN ⚠ | color=#d0413e,#ff453a");
   expect(out).toContain(
     "config: address must be a 0x address (40 hex characters)",
   );
@@ -208,10 +208,10 @@ test("7d line uses history and the live 7d change", () => {
     live({ ts: NOW - (168 - i) * 3600, price: 0.01 + i / 1e5 }),
   );
   expect(render(input({ history7d }))).toMatch(
-    /^7d  [▁-█]{16}  -1\.4% \| font=Menlo size=12 color=#d0413e href=https:\/\/www\.coingecko\.com\/en\/coins\/anoma$/m,
+    /^7d  [▁-█]{16}  -1\.4% \| font=Menlo size=12 color=#d0413e,#ff453a href=https:\/\/www\.coingecko\.com\/en\/coins\/anoma$/m,
   );
   expect(render(input({ history7d, latestLive: live({ change7d: 2.1 }) }))).toMatch(
-    /^7d  [▁-█]{16}  \+2\.1% \| font=Menlo size=12 color=#2e9e44 href=https:\/\/www\.coingecko\.com\/en\/coins\/anoma$/m,
+    /^7d  [▁-█]{16}  \+2\.1% \| font=Menlo size=12 color=#2e9e44,#30d158 href=https:\/\/www\.coingecko\.com\/en\/coins\/anoma$/m,
   );
   expect(render(input({ history7d, latestLive: live({ change7d: null }) }))).toMatch(
     /^7d  [▁-█]{16} \| font=Menlo size=12 color=#6e6e73,#98989d href=https:\/\/www\.coingecko\.com\/en\/coins\/anoma$/m,
@@ -236,7 +236,7 @@ test("error text is kept on one line and cannot inject SwiftBar parameters", () 
     input({ errors: [{ step: "vesting", ts: NOW - 60, message: msg }] }),
   );
   expect(out).toContain(
-    "⚠ Ethereum RPC: HTTP request failed. URL: https://rpc.example / x Details: timeout (1 min ago) | color=#d4a017",
+    "⚠ Ethereum RPC: HTTP request failed. URL: https://rpc.example / x Details: timeout (1 min ago) | color=#d4a017,#ffd60a",
   );
   expect(lines(renderFailure("bad\nconfig | x", actions))[2]).toBe(
     "bad config / x",
@@ -279,7 +279,7 @@ test("settings submenu with an address and a custom value", () => {
 
 test("an invalid settings file offers a reset instead of options", () => {
   const out = render(input({ settings: null }));
-  expect(out).toContain("--Settings file is invalid | color=#d4a017");
+  expect(out).toContain("--Settings file is invalid | color=#d4a017,#ffd60a");
   expect(out).toContain(`--Reset settings to defaults | ${set("reset", "all")}`);
   expect(out).not.toContain("--Price move alert");
 });
