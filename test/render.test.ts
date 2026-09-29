@@ -97,6 +97,7 @@ test("market lines are formatted", () => {
   );
   expect(out).not.toContain("Edit settings");
   expect(out).toContain("Open log | bash=/r/bin/open-log terminal=false");
+  expect(out.endsWith("---\nQuit | bash=/usr/bin/killall param1=SwiftBar terminal=false")).toBe(true);
 });
 
 test("vesting block only with an address", () => {
@@ -272,6 +273,7 @@ test("settings submenu with an address and a custom value", () => {
   expect(out).toContain(`--Remove address | ${set("address", "none")}`);
   expect(out).toContain(`----7% | ${set("price_move_pct", "7")} checked=true`);
   expect(out).not.toMatch(/----5% .*checked=true/);
+  expect(out).toContain(`--Reset settings to defaults | ${set("reset", "all")}`);
 });
 
 test("an invalid settings file offers a reset instead of options", () => {

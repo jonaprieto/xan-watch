@@ -17,5 +17,7 @@ case "$key" in
   address)
     if [ "$value" = none ]; then notify "Address removed"; else notify "Address set to $value, reading balances"; fi
     "$(dirname "$0")/collect-once" ;;
-  reset) "$(dirname "$0")/collect-once" ;;
+  reset)
+    notify "Settings reset to defaults"
+    "$(dirname "$0")/collect-once" ;;
 esac

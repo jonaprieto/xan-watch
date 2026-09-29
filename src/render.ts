@@ -134,6 +134,8 @@ function settingsMenu(s: Settings | null, a: Actions): string[] {
     ...choices("Volume spike alert", "volume_spike_x", s.alerts.volumeSpikeX, [2, 3, 5], (v) => `${v}x`, a),
     ...choices("Unlock ready alert", "unlock_ready_xan", s.alerts.unlockReadyXan, [10_000, 50_000, 100_000, 500_000], (v) => `${num(v)} XAN`, a),
     ...choices("Daily summary", "daily_summary_hour", s.alerts.dailySummaryHour, [7, 8, 9, 12, 18, 21], (v) => `${String(v).padStart(2, "0")}:00`, a),
+    "-----",
+    `--Reset settings to defaults | ${setAction(a, "reset", "all")}`,
   ];
 }
 
@@ -143,6 +145,9 @@ function footer(a: Actions, settings?: Settings | null): string[] {
     `Anoma Explorer ↗ | href=${EXPLORER_URL}`,
     ...(settings === undefined ? [] : settingsMenu(settings, a)),
     `Open log | bash=${a.openLog} terminal=false`,
+    "---",
+    // ponytail: quits SwiftBar itself (and any other plugins); the collector keeps running for alerts.
+    "Quit | bash=/usr/bin/killall param1=SwiftBar terminal=false",
   ];
 }
 
