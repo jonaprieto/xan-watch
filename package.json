@@ -1,5 +1,8 @@
 {
   "name": "xan-watch",
+  "description": "XAN (Anoma) price and vesting position in the macOS menu bar",
+  "author": "Jonathan Prieto-Cubides",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {
