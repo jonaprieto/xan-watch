@@ -44,16 +44,29 @@ const STEP_LABEL: Record<Step, string> = {
   alerts: "Alerts",
 };
 
-export function sparkline(prices: number[], width = 16): string {
-  if (prices.length === 0) return "";
-  const buckets = Array.from({ length: width }, (_, b) => {
-    const start = Math.floor((b * prices.length) / width);
-    const end = Math.max(
-      start + 1,
-      Math.floor(((b + 1) * prices.length) / width),
+export function sparkline(
+  points: { ts: number; price: number }[],
+  from: number,
+  to: number,
+  width = 16,
+): string {
+  const inWindow = points.filter((p) => p.ts >= from && p.ts <= to);
+  if (inWindow.length === 0) return "";
+  const sums = new Array<number>(width).fill(0);
+  const counts = new Array<number>(width).fill(0);
+  for (const p of inWindow) {
+    const b = Math.min(
+      width - 1,
+      Math.floor(((p.ts - from) * width) / (to - from)),
     );
-    const slice = prices.slice(start, end);
-    return slice.reduce((s, x) => s + x, 0) / slice.length;
+    sums[b]! += p.price;
+    counts[b]! += 1;
+  }
+  const firstFilled = counts.findIndex((c) => c > 0);
+  let prev = sums[firstFilled]! / counts[firstFilled]!;
+  const buckets = sums.map((sum, b) => {
+    if (counts[b]! > 0) prev = sum / counts[b]!;
+    return prev;
   });
   const lo = Math.min(...buckets);
   const hi = Math.max(...buckets);
@@ -128,7 +141,11 @@ export function render(i: RenderInput): string {
     );
   if (live?.volume24h != null)
     out.push(`Vol 24h   ${usd(live.volume24h)} | ${MONO}`);
-  const spark = sparkline(i.history7d.map((r) => r.price));
+  const spark = sparkline(
+    i.history7d.map((r) => ({ ts: r.ts, price: r.price })),
+    i.now - 7 * 86_400,
+    i.now,
+  );
   if (spark)
     out.push(
       `7d  ${spark}${live?.change7d != null ? `  ${pct(live.change7d)}` : ""} | ${MONO}`,

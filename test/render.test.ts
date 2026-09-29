@@ -153,14 +153,39 @@ test("failure screen", () => {
   );
 });
 
+const W = 7 * 86_400;
+const pts = (n: number, f: (i: number) => number) =>
+  Array.from({ length: n }, (_, i) => ({ ts: (i * W) / n, price: f(i) }));
+
 test("sparkline", () => {
-  const up = Array.from({ length: 168 }, (_, i) => i);
-  const s = sparkline(up);
+  const s = sparkline(pts(168, (i) => i), 0, W);
   expect([...s].length).toBe(16);
   expect(s.startsWith("▁")).toBe(true);
   expect(s.endsWith("█")).toBe(true);
-  expect(sparkline([2, 2, 2])).toBe("▄".repeat(16));
-  expect(sparkline([])).toBe("");
+  expect(sparkline(pts(3, () => 2), 0, W)).toBe("▄".repeat(16));
+  expect(sparkline([], 0, W)).toBe("");
+});
+
+test("sparkline buckets by time, so dense recent rows do not dominate", () => {
+  const hourly = Array.from({ length: 144 }, (_, i) => ({
+    ts: i * 3600,
+    price: 1 + i / 143,
+  }));
+  const recent = Array.from({ length: 288 }, (_, i) => ({
+    ts: 6 * 86_400 + i * 300,
+    price: 2,
+  }));
+  const s = [...sparkline([...hourly, ...recent], 0, W)];
+  expect(s[0]).toBe("▁");
+  expect(s[8]).not.toBe("█");
+});
+
+test("sparkline carries values across empty buckets", () => {
+  const s = [...sparkline([{ ts: W / 2, price: 1 }, { ts: W - 1, price: 2 }], 0, W)];
+  expect(s.length).toBe(16);
+  expect(s[0]).toBe(s[8]);
+  expect(s[0]).toBe("▁");
+  expect(s[15]).toBe("█");
 });
 
 test("7d line uses history and the live 7d change", () => {
