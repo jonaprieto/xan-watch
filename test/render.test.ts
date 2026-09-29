@@ -1,0 +1,193 @@
+import { expect, test } from "bun:test";
+import type { MarketRow, VestingRow } from "../src/db";
+import { WEI } from "../src/format";
+import {
+  type RenderInput,
+  oneLine,
+  render,
+  renderFailure,
+  sparkline,
+} from "../src/render";
+
+const NOW = 1_790_760_000; // 21.3 h after vesting start: day 1, 0.1% vested
+const actions = {
+  collect: "/r/bin/collect-once",
+  editSettings: "/r/bin/edit-settings",
+  openLog: "/r/bin/open-log",
+};
+const live = (extra: Partial<MarketRow> = {}): MarketRow => ({
+  ts: NOW - 120,
+  price: 0.01222,
+  marketCap: 30_237_691,
+  fdv: 120_950_765,
+  volume24h: 2_139_257,
+  change24h: 0.69,
+  change7d: -1.4,
+  circulating: 2_500_000_000,
+  sentimentUp: 100,
+  watchlist: 2409,
+  source: "live",
+  ...extra,
+});
+const vesting: VestingRow = {
+  ts: NOW,
+  principal: 16_000_000n * WEI,
+  locked: 15_985_388n * WEI,
+  unlockable: 14_612n * WEI,
+  unlocked: 0n,
+  balance: 16_000_000n * WEI,
+};
+const input = (over: Partial<RenderInput> = {}): RenderInput => {
+  const l = over.latestLive === undefined ? live() : over.latestLive;
+  return {
+    latest: l,
+    latestLive: l,
+    history7d: [],
+    vesting: null,
+    hasAddress: false,
+    errors: [],
+    now: NOW,
+    actions,
+    ...over,
+  };
+};
+const lines = (s: string) => s.split("\n");
+
+test("title shows price and a green up arrow", () => {
+  expect(lines(render(input()))[0]).toBe("XAN $0.01222 ▲0.7% | color=#2e9e44");
+  expect(lines(render(input()))[1]).toBe("---");
+});
+
+test("title shows a red down arrow", () => {
+  expect(
+    lines(render(input({ latestLive: live({ change24h: -1.4 }) })))[0],
+  ).toBe("XAN $0.01222 ▼1.4% | color=#d0413e");
+});
+
+test("stale data is marked after 15 minutes", () => {
+  expect(
+    lines(render(input({ latestLive: live({ ts: NOW - 16 * 60 }) })))[0],
+  ).toBe("XAN $0.01222 ▲0.7% stale | color=#d4a017");
+  expect(
+    lines(render(input({ latestLive: live({ ts: NOW - 14 * 60 }) })))[0],
+  ).not.toContain("stale");
+});
+
+test("market lines are formatted", () => {
+  const out = render(input());
+  expect(out).toContain("Mkt cap   $30.24M   FDV $121.0M | font=Menlo size=12");
+  expect(out).toContain("Vol 24h   $2.139M | font=Menlo size=12");
+  expect(out).toContain("Sentiment  100% up votes, 2,409 watchlists");
+  expect(out).toContain("Unlock supply today ~6.85M XAN (network estimate)");
+  expect(out).toContain("Updated 2 min ago");
+  expect(out).toContain(
+    "Open CoinGecko ↗ | href=https://www.coingecko.com/en/coins/anoma",
+  );
+  expect(out).toContain(
+    "Run collector now | bash=/r/bin/collect-once terminal=false refresh=true",
+  );
+  expect(out).toContain(
+    "Edit settings… | bash=/r/bin/edit-settings terminal=false",
+  );
+  expect(out).toContain("Open log | bash=/r/bin/open-log terminal=false");
+});
+
+test("vesting block only with an address", () => {
+  expect(render(input({ vesting }))).not.toContain("My vesting");
+  const out = render(input({ vesting, hasAddress: true }));
+  expect(out).toContain("My vesting  16,000,000 XAN | font=Menlo size=12");
+  expect(out).toContain(
+    "  locked      15,985,388  $195.3k | font=Menlo size=12",
+  );
+  expect(out).toContain(
+    "  ready           14,612     $179 | font=Menlo size=12",
+  );
+  expect(out).toContain("  vested 0.1%, day 1 of 1095 | font=Menlo size=12");
+});
+
+test("address set but no vesting row yet says so", () => {
+  expect(render(input({ hasAddress: true }))).toContain(
+    "My vesting  waiting for first read",
+  );
+});
+
+test("errors are shown in plain words", () => {
+  const out = render(
+    input({
+      errors: [
+        { step: "snapshot", ts: NOW - 12 * 60, message: "coingecko: HTTP 429" },
+        { step: "vesting", ts: NOW - 60, message: "rpc timeout" },
+      ],
+    }),
+  );
+  expect(out).toContain(
+    "⚠ CoinGecko: coingecko: HTTP 429 (12 min ago) | color=#d4a017",
+  );
+  expect(out).toContain(
+    "⚠ Ethereum RPC: rpc timeout (1 min ago) | color=#d4a017",
+  );
+});
+
+test("no data yet", () => {
+  const out = render(input({ latestLive: null }));
+  expect(lines(out)[0]).toBe("XAN … | color=gray");
+  expect(out).toContain(
+    "No data yet. The first collection takes a few seconds.",
+  );
+  expect(out).toContain(
+    "Run collector now | bash=/r/bin/collect-once terminal=false refresh=true",
+  );
+});
+
+test("failure screen", () => {
+  const out = renderFailure(
+    "config: address must be a 0x address (40 hex characters)",
+    actions,
+  );
+  expect(lines(out)[0]).toBe("XAN ⚠ | color=#d0413e");
+  expect(out).toContain(
+    "config: address must be a 0x address (40 hex characters)",
+  );
+  expect(out).toContain(
+    "Edit settings… | bash=/r/bin/edit-settings terminal=false",
+  );
+});
+
+test("sparkline", () => {
+  const up = Array.from({ length: 168 }, (_, i) => i);
+  const s = sparkline(up);
+  expect([...s].length).toBe(16);
+  expect(s.startsWith("▁")).toBe(true);
+  expect(s.endsWith("█")).toBe(true);
+  expect(sparkline([2, 2, 2])).toBe("▄".repeat(16));
+  expect(sparkline([])).toBe("");
+});
+
+test("7d line uses history and the live 7d change", () => {
+  const history7d = Array.from({ length: 168 }, (_, i) =>
+    live({ ts: NOW - (168 - i) * 3600, price: 0.01 + i / 1e5 }),
+  );
+  expect(render(input({ history7d }))).toMatch(
+    /^7d  [▁-█]{16}  -1\.4% \| font=Menlo size=12$/m,
+  );
+});
+
+test("error text is kept on one line and cannot inject SwiftBar parameters", () => {
+  const msg =
+    "HTTP request failed.\n\nURL: https://rpc.example | x\nDetails: timeout";
+  const out = render(
+    input({ errors: [{ step: "vesting", ts: NOW - 60, message: msg }] }),
+  );
+  expect(out).toContain(
+    "⚠ Ethereum RPC: HTTP request failed. URL: https://rpc.example / x Details: timeout (1 min ago) | color=#d4a017",
+  );
+  expect(lines(renderFailure("bad\nconfig | x", actions))[2]).toBe(
+    "bad config / x",
+  );
+});
+
+test("oneLine truncates long messages", () => {
+  const s = oneLine("x".repeat(300));
+  expect(s.length).toBe(120);
+  expect(s.endsWith("…")).toBe(true);
+});
