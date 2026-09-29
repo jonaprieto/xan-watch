@@ -11,6 +11,11 @@ sparkline, and, if you give it your address, your vesting position in XAN and US
 collector stores the history in SQLite every 5 minutes and notifies you about big price moves,
 volume spikes, tokens ready to unlock, and a daily summary.
 
+<p align="center">
+  <img src="docs/menubar.png" alt="XAN price in the menu bar" width="152"><br>
+  <img src="docs/menu.png" alt="xan-watch menu with price, market data, 7-day sparkline and actions" width="320">
+</p>
+
 It is read-only. It never asks for a key and never sends a transaction; your address is only used
 to read public balances from the XanV2 token contract.
 
