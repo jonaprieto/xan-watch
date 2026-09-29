@@ -5,4 +5,5 @@ export const VEST_START = 1_790_683_200;
 export const VEST_DAYS = 1095;
 export const VEST_DURATION = VEST_DAYS * 86_400;
 export const EXPLORER_URL = "https://explorer.anoma.net";
+export const VESTING_SPEC_URL = "https://github.com/anoma/token/blob/main/docs/01-XanV2-upgrade.md";
 export const COINGECKO_URL = "https://www.coingecko.com/en/coins/anoma";

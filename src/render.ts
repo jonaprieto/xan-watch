@@ -1,6 +1,7 @@
 import {
   COINGECKO_URL,
   EXPLORER_URL,
+  VESTING_SPEC_URL,
   TOTAL_SUPPLY,
   VEST_DAYS,
   VEST_DURATION,
@@ -206,7 +207,7 @@ export function render(i: RenderInput): string {
   }
   if (live?.circulating != null)
     out.push(
-      `Unlock supply today ~${num((TOTAL_SUPPLY - live.circulating) / VEST_DAYS / 1e6, 2)}M XAN (network estimate) | ${MUTED}`,
+      `Unlock supply today ~${num((TOTAL_SUPPLY - live.circulating) / VEST_DAYS / 1e6, 2)}M XAN (network estimate) | ${MUTED} href=${VESTING_SPEC_URL}`,
     );
   out.push(
     `Updated ${ago(i.now - i.latest.ts)} | ${MUTED}`,
