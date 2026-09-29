@@ -203,13 +203,13 @@ test("7d line uses history and the live 7d change", () => {
     live({ ts: NOW - (168 - i) * 3600, price: 0.01 + i / 1e5 }),
   );
   expect(render(input({ history7d }))).toMatch(
-    /^7d  [▁-█]{16}  -1\.4% \| font=Menlo size=12 color=#d0413e$/m,
+    /^7d  [▁-█]{16}  -1\.4% \| font=Menlo size=12 color=#d0413e href=https:\/\/www\.coingecko\.com\/en\/coins\/anoma$/m,
   );
   expect(render(input({ history7d, latestLive: live({ change7d: 2.1 }) }))).toMatch(
-    /^7d  [▁-█]{16}  \+2\.1% \| font=Menlo size=12 color=#2e9e44$/m,
+    /^7d  [▁-█]{16}  \+2\.1% \| font=Menlo size=12 color=#2e9e44 href=https:\/\/www\.coingecko\.com\/en\/coins\/anoma$/m,
   );
   expect(render(input({ history7d, latestLive: live({ change7d: null }) }))).toMatch(
-    /^7d  [▁-█]{16} \| font=Menlo size=12 color=#6e6e73,#98989d$/m,
+    /^7d  [▁-█]{16} \| font=Menlo size=12 color=#6e6e73,#98989d href=https:\/\/www\.coingecko\.com\/en\/coins\/anoma$/m,
   );
 });
 

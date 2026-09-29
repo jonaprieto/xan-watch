@@ -164,7 +164,7 @@ export function render(i: RenderInput): string {
   if (spark) {
     const c7 = live?.change7d ?? null;
     const trend = c7 === null ? MUTED : `color=${c7 >= 0 ? GREEN : RED}`;
-    out.push(`7d  ${spark}${c7 !== null ? `  ${pct(c7)}` : ""} | ${MONO} ${trend}`);
+    out.push(`7d  ${spark}${c7 !== null ? `  ${pct(c7)}` : ""} | ${MONO} ${trend} href=${COINGECKO_URL}`);
   }
 
   if (i.hasAddress) {
