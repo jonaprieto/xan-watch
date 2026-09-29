@@ -85,11 +85,9 @@ test("market lines are formatted", () => {
   expect(out).toContain(`Sentiment  100% up votes, 2,409 watchlists | ${MUTED}`);
   expect(out).toContain(`Unlock supply today ~6.85M XAN (network estimate) | ${MUTED}`);
   expect(out).toContain(`Updated 2 min ago | ${MUTED}`);
+  expect(out).not.toContain("Open CoinGecko");
   expect(out).toContain(
-    "Open CoinGecko ↗ | href=https://www.coingecko.com/en/coins/anoma",
-  );
-  expect(out).toContain(
-    "Run collector now | bash=/r/bin/collect-once terminal=false refresh=true",
+    "Refresh now | bash=/r/bin/collect-once terminal=false refresh=true",
   );
   expect(out).toContain(
     "Edit settings… | bash=/r/bin/edit-settings terminal=false",
@@ -145,7 +143,7 @@ test("no data yet", () => {
     `No data yet. The first collection takes a few seconds. | ${MUTED}`,
   );
   expect(out).toContain(
-    "Run collector now | bash=/r/bin/collect-once terminal=false refresh=true",
+    "Refresh now | bash=/r/bin/collect-once terminal=false refresh=true",
   );
 });
 

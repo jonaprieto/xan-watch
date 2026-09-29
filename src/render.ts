@@ -92,7 +92,7 @@ function copyable(text: string, raw: number, a: Actions): string {
 
 function footer(a: Actions): string[] {
   return [
-    `Run collector now | bash=${a.collect} terminal=false refresh=true`,
+    `Refresh now | bash=${a.collect} terminal=false refresh=true`,
     `Edit settings… | bash=${a.editSettings} terminal=false`,
     `Open log | bash=${a.openLog} terminal=false`,
   ];
@@ -208,7 +208,6 @@ export function render(i: RenderInput): string {
     );
   out.push(
     `Updated ${ago(i.now - i.latest.ts)} | ${MUTED}`,
-    `Open CoinGecko ↗ | href=${COINGECKO_URL}`,
     "---",
     ...footer(i.actions),
   );
