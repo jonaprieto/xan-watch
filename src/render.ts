@@ -37,6 +37,8 @@ export function oneLine(s: string, max = 120): string {
   return t.length > max ? `${t.slice(0, max - 1)}…` : t;
 }
 const MONO = "font=Menlo size=12";
+// Bold menu bar system font (13pt). SwiftBar falls back to the regular font if the name ever stops resolving.
+const TITLE = "font=.AppleSystemUIFontBold size=13";
 const BOLD = "font=Menlo-Bold size=12";
 // Primary text color (light, dark) for a heading that has no action but must not render disabled.
 const PRIMARY = "color=#1d1d1f,#f5f5f7";
@@ -195,7 +197,7 @@ export function render(i: RenderInput): string {
         ? GREEN
         : RED;
   const out = [
-    `XAN ${price(i.latest.price)}${arrow}${stale ? " stale" : ""}${color ? ` | color=${color}` : ""}`,
+    `XAN ${price(i.latest.price)}${arrow}${stale ? " stale" : ""} | ${TITLE}${color ? ` color=${color}` : ""}`,
     "---",
   ];
 

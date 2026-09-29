@@ -64,20 +64,20 @@ const input = (over: Partial<RenderInput> = {}): RenderInput => {
 const lines = (s: string) => s.split("\n");
 
 test("title shows price and a green up arrow", () => {
-  expect(lines(render(input()))[0]).toBe("XAN $0.01222 ▲0.7% | color=#2e9e44");
+  expect(lines(render(input()))[0]).toBe("XAN $0.01222 ▲0.7% | font=.AppleSystemUIFontBold size=13 color=#2e9e44");
   expect(lines(render(input()))[1]).toBe("---");
 });
 
 test("title shows a red down arrow", () => {
   expect(
     lines(render(input({ latestLive: live({ change24h: -1.4 }) })))[0],
-  ).toBe("XAN $0.01222 ▼1.4% | color=#d0413e");
+  ).toBe("XAN $0.01222 ▼1.4% | font=.AppleSystemUIFontBold size=13 color=#d0413e");
 });
 
 test("stale data is marked after 15 minutes", () => {
   expect(
     lines(render(input({ latestLive: live({ ts: NOW - 16 * 60 }) })))[0],
-  ).toBe("XAN $0.01222 ▲0.7% stale | color=#d4a017");
+  ).toBe("XAN $0.01222 ▲0.7% stale | font=.AppleSystemUIFontBold size=13 color=#d4a017");
   expect(
     lines(render(input({ latestLive: live({ ts: NOW - 14 * 60 }) })))[0],
   ).not.toContain("stale");

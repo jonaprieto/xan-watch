@@ -24,7 +24,7 @@ test("renders from the DB", () => {
   const db = openDb(join(home, "Library", "Application Support", "xan-watch", "xan.db"));
   insertMarket(db, [{ ts: Math.floor(Date.now() / 1000), price: 0.01222, marketCap: 1, fdv: 1, volume24h: 1, change24h: 0.7, change7d: 0, circulating: null, sentimentUp: null, watchlist: null, source: "live" }]);
   db.close();
-  expect(run(home).out.split("\n")[0]).toBe("XAN $0.01222 ▲0.7% | color=#2e9e44");
+  expect(run(home).out.split("\n")[0]).toBe("XAN $0.01222 ▲0.7% | font=.AppleSystemUIFontBold size=13 color=#2e9e44");
 });
 
 const dbPath = (home: string) => join(home, "Library", "Application Support", "xan-watch", "xan.db");
@@ -39,7 +39,7 @@ test("a broken config keeps market data and shows the settings error", () => {
   writeFileSync(join(home, ".config", "xan-watch", "config.toml"), `address = "0x123"`);
   const r = run(home);
   expect(r.code).toBe(0);
-  expect(r.out.split("\n")[0]).toBe("XAN $0.01222 ▲0.7% | color=#2e9e44");
+  expect(r.out.split("\n")[0]).toBe("XAN $0.01222 ▲0.7% | font=.AppleSystemUIFontBold size=13 color=#2e9e44");
   expect(r.out).toContain("⚠ Settings:");
   expect(r.out).toContain("address must be a 0x address");
 });
