@@ -27,7 +27,7 @@ install:
 	echo "plugin: $$dir/xan.1m.sh"
 	@if [ ! -f "$(CONFIG)" ]; then mkdir -p "$$(dirname "$(CONFIG)")"; \
 	  "$(BUN)" src/config.ts --template $(if $(ADDRESS),--address $(ADDRESS)) > "$(CONFIG)"; echo "config: $(CONFIG)"; \
-	  elif [ -n "$(ADDRESS)" ]; then echo 'config exists, ADDRESS ignored: use "Edit settings…" in the menu'; fi
+	  elif [ -n "$(ADDRESS)" ]; then echo 'config exists, ADDRESS ignored: use Settings > Set address from clipboard in the menu'; fi
 	mkdir -p "$(HOME)/Library/Logs" "$(HOME)/Library/LaunchAgents"
 	sed -e 's|@BUN@|$(BUN)|g' -e 's|@REPO@|$(REPO)|g' -e 's|@HOME@|$(HOME)|g' launchd/$(LABEL).plist.in > "$(PLIST)"
 	-launchctl bootout gui/$(UID)/$(LABEL) 2>/dev/null && sleep 1

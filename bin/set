@@ -1,0 +1,14 @@
+#!/bin/sh
+# Menu action: change one setting, then collect so the menu reflects it right away.
+# Invalid input (e.g. a clipboard that is not an address) is reported as a notification.
+. "$(dirname "$0")/env.sh"
+key=$1
+value=$2
+[ "$value" = clipboard ] && value=$(pbpaste)
+if ! err=$("$BUN" "$REPO/src/config.ts" --set "$key" "$value" 2>&1); then
+  osascript -e 'on run argv' -e 'display notification (item 1 of argv) with title "xan-watch"' -e 'end run' "$err"
+  exit 1
+fi
+case "$key" in
+  address | reset) "$(dirname "$0")/collect-once" ;;
+esac

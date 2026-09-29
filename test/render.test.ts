@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import type { MarketRow, VestingRow } from "../src/db";
 import { WEI } from "../src/format";
+import { DEFAULT_ALERTS, DEFAULT_RPC } from "../src/config";
 import {
   type RenderInput,
   oneLine,
@@ -12,13 +13,17 @@ import {
 const NOW = 1_790_760_000; // 21.3 h after vesting start: day 1, 0.1% vested
 const actions = {
   collect: "/r/bin/collect-once",
-  editSettings: "/r/bin/edit-settings",
+  set: "/r/bin/set",
   openLog: "/r/bin/open-log",
   copy: "/r/bin/copy",
 };
 const MONO = "font=Menlo size=12";
 const copy = (raw: string) => `bash=/r/bin/copy param1=${raw} terminal=false tooltip="Click to copy"`;
 const MUTED = "color=#6e6e73,#98989d";
+const ADDR = "0x1234567890abcdef1234567890abcdef12345678" as const;
+const SETTINGS = { address: null, rpcUrl: DEFAULT_RPC, alerts: DEFAULT_ALERTS };
+const WITH_ADDR = { ...SETTINGS, address: ADDR };
+const set = (key: string, value: string) => `bash=/r/bin/set param1=${key} param2=${value} terminal=false refresh=true`;
 const live = (extra: Partial<MarketRow> = {}): MarketRow => ({
   ts: NOW - 120,
   price: 0.01222,
@@ -48,7 +53,7 @@ const input = (over: Partial<RenderInput> = {}): RenderInput => {
     latestLive: l,
     history7d: [],
     vesting: null,
-    hasAddress: false,
+    settings: SETTINGS,
     errors: [],
     now: NOW,
     actions,
@@ -90,15 +95,13 @@ test("market lines are formatted", () => {
   expect(out).toContain(
     "Refresh now | bash=/r/bin/collect-once terminal=false refresh=true",
   );
-  expect(out).toContain(
-    "Edit settings… | bash=/r/bin/edit-settings terminal=false",
-  );
+  expect(out).not.toContain("Edit settings");
   expect(out).toContain("Open log | bash=/r/bin/open-log terminal=false");
 });
 
 test("vesting block only with an address", () => {
   expect(render(input({ vesting }))).not.toContain("My vesting");
-  const out = render(input({ vesting, hasAddress: true }));
+  const out = render(input({ vesting, settings: WITH_ADDR }));
   expect(out).toContain(`My vesting  16,000,000 XAN | ${MONO} ${copy("16000000")}`);
   expect(out).toContain(`  locked      15,985,388  $195.3k | ${MONO} ${copy("15985388")}`);
   expect(out).toContain(`  ready           14,612     $179 | ${MONO} ${copy("14612")}`);
@@ -106,7 +109,7 @@ test("vesting block only with an address", () => {
 });
 
 test("address set but no vesting row yet says so", () => {
-  expect(render(input({ hasAddress: true }))).toContain(
+  expect(render(input({ settings: WITH_ADDR }))).toContain(
     `My vesting  waiting for first read | ${MUTED}`,
   );
 });
@@ -157,9 +160,7 @@ test("failure screen", () => {
   expect(out).toContain(
     "config: address must be a 0x address (40 hex characters)",
   );
-  expect(out).toContain(
-    "Edit settings… | bash=/r/bin/edit-settings terminal=false",
-  );
+  expect(out).not.toContain("Settings");
 });
 
 const W = 7 * 86_400;
@@ -213,11 +214,14 @@ test("7d line uses history and the live 7d change", () => {
 });
 
 test("every informational line is enabled: it has a click action or a color", () => {
-  const out = render(input({ vesting, hasAddress: true, history7d: [live({ ts: NOW - 3600 })] }));
-  for (const l of lines(out)) {
-    if (l === "---") continue;
+  const out = render(input({ vesting, settings: WITH_ADDR, history7d: [live({ ts: NOW - 3600 })] }));
+  const ls = lines(out);
+  const depth = (l: string) => (l.match(/^(--)*/)?.[0].length ?? 0) / 2;
+  ls.forEach((l, k) => {
+    if (/^(--)*---$/.test(l)) return; // separator
+    if (depth(ls[k + 1] ?? "") > depth(l)) return; // submenu parent: AppKit keeps it enabled
     expect(l).toMatch(/\| .*(bash=|href=|color=)/);
-  }
+  });
 });
 
 test("error text is kept on one line and cannot inject SwiftBar parameters", () => {
@@ -238,4 +242,38 @@ test("oneLine truncates long messages", () => {
   const s = oneLine("x".repeat(300));
   expect(s.length).toBe(120);
   expect(s.endsWith("…")).toBe(true);
+});
+
+test("settings live in a submenu: pick by clicking, current choice checked", () => {
+  const out = render(input());
+  expect(out).toContain("Settings");
+  expect(out).toContain(`--Address  not set | ${MUTED}`);
+  expect(out).toContain(`--Set address from clipboard | ${set("address", "clipboard")}`);
+  expect(out).not.toContain("Remove address");
+  expect(out).toContain("-----");
+  expect(out).toContain("--Price move alert  5%");
+  expect(out).toContain(`----5% | ${set("price_move_pct", "5")} checked=true`);
+  expect(out).toContain(`----10% | ${set("price_move_pct", "10")}`);
+  expect(out).toContain("--Volume spike alert  3x");
+  expect(out).toContain(`----3x | ${set("volume_spike_x", "3")} checked=true`);
+  expect(out).toContain("--Unlock ready alert  50,000 XAN");
+  expect(out).toContain(`----100,000 XAN | ${set("unlock_ready_xan", "100000")}`);
+  expect(out).toContain("--Daily summary  09:00");
+  expect(out).toContain(`----18:00 | ${set("daily_summary_hour", "18")}`);
+});
+
+test("settings submenu with an address and a custom value", () => {
+  const s = { ...WITH_ADDR, alerts: { ...DEFAULT_ALERTS, priceMovePct: 7 } };
+  const out = render(input({ settings: s }));
+  expect(out).toContain(`--Address  0x1234…5678 | ${MONO} ${copy(ADDR)}`);
+  expect(out).toContain(`--Remove address | ${set("address", "none")}`);
+  expect(out).toContain(`----7% | ${set("price_move_pct", "7")} checked=true`);
+  expect(out).not.toMatch(/----5% .*checked=true/);
+});
+
+test("an invalid settings file offers a reset instead of options", () => {
+  const out = render(input({ settings: null }));
+  expect(out).toContain("--Settings file is invalid | color=#d4a017");
+  expect(out).toContain(`--Reset settings to defaults | ${set("reset", "all")}`);
+  expect(out).not.toContain("--Price move alert");
 });

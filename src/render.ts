@@ -7,12 +7,13 @@ import {
   VEST_DURATION,
   VEST_START,
 } from "./constants";
+import type { Settings } from "./config";
 import type { MarketRow, Step, StepError, VestingRow } from "./db";
 import { fromWei, num, pct, price, usd } from "./format";
 
 export type Actions = {
   collect: string;
-  editSettings: string;
+  set: string;
   openLog: string;
   copy: string;
 };
@@ -21,7 +22,8 @@ export type RenderInput = {
   latestLive: MarketRow | null;
   history7d: MarketRow[];
   vesting: VestingRow | null;
-  hasAddress: boolean;
+  /** Parsed settings, or null when the settings file is invalid. */
+  settings: Settings | null;
   errors: StepError[];
   now: number;
   actions: Actions;
@@ -88,15 +90,58 @@ function ago(seconds: number): string {
 }
 
 /** A value line: monospace, and clicking copies `raw` (a plain number) to the clipboard. */
-function copyable(text: string, raw: number, a: Actions): string {
+function copyable(text: string, raw: number | string, a: Actions): string {
   return `${text} | ${MONO} bash=${a.copy} param1=${raw} terminal=false tooltip="Click to copy"`;
 }
 
-function footer(a: Actions): string[] {
+function setAction(a: Actions, key: string, value: string | number): string {
+  return `bash=${a.set} param1=${key} param2=${value} terminal=false refresh=true`;
+}
+
+/** One submenu of preset choices; the current value is checked and kept even if it is not a preset. */
+function choices(
+  title: string,
+  key: string,
+  current: number,
+  presets: number[],
+  label: (v: number) => string,
+  a: Actions,
+): string[] {
+  const values = [...new Set([...presets, current])].sort((x, y) => x - y);
+  return [
+    `--${title}  ${label(current)}`,
+    ...values.map((v) => `----${label(v)} | ${setAction(a, key, v)}${v === current ? " checked=true" : ""}`),
+  ];
+}
+
+function settingsMenu(s: Settings | null, a: Actions): string[] {
+  if (!s)
+    return [
+      "Settings",
+      `--Settings file is invalid | color=${AMBER}`,
+      `--Reset settings to defaults | ${setAction(a, "reset", "all")}`,
+    ];
+  const addr = s.address;
+  return [
+    "Settings",
+    addr
+      ? copyable(`--Address  ${addr.slice(0, 6)}…${addr.slice(-4)}`, addr, a)
+      : `--Address  not set | ${MUTED}`,
+    `--Set address from clipboard | ${setAction(a, "address", "clipboard")}`,
+    ...(addr ? [`--Remove address | ${setAction(a, "address", "none")}`] : []),
+    "-----",
+    ...choices("Price move alert", "price_move_pct", s.alerts.priceMovePct, [3, 5, 10, 15], (v) => `${v}%`, a),
+    ...choices("Volume spike alert", "volume_spike_x", s.alerts.volumeSpikeX, [2, 3, 5], (v) => `${v}x`, a),
+    ...choices("Unlock ready alert", "unlock_ready_xan", s.alerts.unlockReadyXan, [10_000, 50_000, 100_000, 500_000], (v) => `${num(v)} XAN`, a),
+    ...choices("Daily summary", "daily_summary_hour", s.alerts.dailySummaryHour, [7, 8, 9, 12, 18, 21], (v) => `${String(v).padStart(2, "0")}:00`, a),
+  ];
+}
+
+function footer(a: Actions, settings?: Settings | null): string[] {
   return [
     `Refresh now | bash=${a.collect} terminal=false refresh=true`,
     `Anoma Explorer ↗ | href=${EXPLORER_URL}`,
-    `Edit settings… | bash=${a.editSettings} terminal=false`,
+    ...(settings === undefined ? [] : settingsMenu(settings, a)),
     `Open log | bash=${a.openLog} terminal=false`,
   ];
 }
@@ -123,7 +168,7 @@ export function render(i: RenderInput): string {
       ...errors,
       `No data yet. The first collection takes a few seconds. | ${MUTED}`,
       "---",
-      ...footer(i.actions),
+      ...footer(i.actions, i.settings),
     ].join("\n");
   }
 
@@ -170,7 +215,7 @@ export function render(i: RenderInput): string {
     out.push(`7d  ${spark}${c7 !== null ? `  ${pct(c7)}` : ""} | ${MONO} ${trend} href=${COINGECKO_URL}`);
   }
 
-  if (i.hasAddress) {
+  if (i.settings?.address) {
     out.push("---");
     if (!i.vesting) {
       out.push(`My vesting  waiting for first read | ${MUTED}`);
@@ -212,7 +257,7 @@ export function render(i: RenderInput): string {
   out.push(
     `Updated ${ago(i.now - i.latest.ts)} | ${MUTED}`,
     "---",
-    ...footer(i.actions),
+    ...footer(i.actions, i.settings),
   );
   return out.join("\n");
 }

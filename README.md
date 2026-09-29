@@ -32,7 +32,7 @@ make install ADDRESS=0xYourVestingAddress     # also show your vesting position
 ```
 
 `make install` installs SwiftBar if needed, points it at a plugin folder (it keeps yours if you
-already use SwiftBar), writes a commented settings file, starts the collector as a login item, and
+already use SwiftBar), writes a settings file, starts the collector as a login item, and
 opens SwiftBar. XAN shows up in the menu bar within a minute, with 30 days of history already loaded.
 
 If SwiftBar was already running, quit and reopen it once so it picks up the plugin. The first
@@ -46,13 +46,16 @@ Keep the folder where you cloned it. If you move it, run `make install` again fr
 - Click the 7-day chart or the sentiment line to open CoinGecko; the unlock-supply line opens the
   vesting spec.
 - "Refresh now" fetches fresh data immediately instead of waiting for the next 5-minute collection.
-- "Edit settings…" opens the settings file. Changes apply within 5 minutes, no restart needed.
+- "Settings" is a submenu: pick alert thresholds and the summary hour by clicking (the current
+  choice is checked). To add your address, copy it and click "Set address from clipboard".
 - "Open log" shows what the collector has been doing. Problems also appear in the menu itself,
   marked with ⚠.
 
 ## Settings
 
-`~/.config/xan-watch/config.toml`, every key optional:
+Everything is adjustable from the Settings submenu. The menu reads and writes
+`~/.config/xan-watch/config.toml`, which you can also edit by hand; the collector re-reads it every
+5 minutes. Every key is optional:
 
 ```toml
 address = "0x..."          # your vesting address; omit to hide the vesting block
